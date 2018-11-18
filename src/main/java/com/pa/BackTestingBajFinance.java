@@ -5,13 +5,32 @@ import com.opencsv.CSVReaderBuilder;
 
 import java.io.FileReader;
 import java.util.List;
-import java.util.function.DoubleBinaryOperator;
 
 public class BackTestingBajFinance {
 
+  private static double MAX_CAPITAL = 500000;
+  private static final int NUMBER_OF_DAYS = 5;
+
+
   static double maxMoneySpent = 0;
   static boolean isCapitalOver = false;
-  static double maxCapital = 500000;
+
+  static int sellOrder = 0;
+  static double minCapitalInHand = 9999999;
+
+
+  private static boolean reCalcCapToDeploy = true;
+  private static Double capitalInHand = MAX_CAPITAL;
+  private static Double capitalToDeploy = 0.0;
+
+
+  public static Double getCapitalToDeploy() {
+    if (reCalcCapToDeploy) {
+      capitalToDeploy = capitalInHand / NUMBER_OF_DAYS;
+    }
+    reCalcCapToDeploy = false;
+    return capitalToDeploy;
+  }
 
   public static void main(String[] args) {
     BackTestingBajFinance bajFinance = new BackTestingBajFinance();
@@ -40,16 +59,20 @@ public class BackTestingBajFinance {
       int quantityheld = 0;
       int quantityToBeBoughtPerOrder = 5;
       int quantityBoughtToday = 0;
+
       Double netProfit = 0.0;
       Double avgCostPrice = 0.0;
       Double totalMoneySpent = 0.0;
-      Double capitalInHand = maxCapital;
+
 
       for (int i = 0; i < allData.size(); i++) {
 
+        double capitalToDeploy = getCapitalToDeploy();
         if (avgCostPrice > 0) {
-          double capitalToDeploy = capitalInHand / 5;
-          quantityToBeBoughtPerOrder = ((int)Math.floor(capitalToDeploy / avgCostPrice))/4;
+          quantityToBeBoughtPerOrder = ((int) Math.floor(capitalToDeploy / avgCostPrice)) / 4;
+        }else{
+          quantityToBeBoughtPerOrder = 5;
+          //TODO: optimize like knapsack
         }
 
         // for (int i = 0; i < 442; i++) {
@@ -78,8 +101,8 @@ public class BackTestingBajFinance {
           tomorrowSellingPrice = 0.0;
         } else {
           System.out.println("Buying prices: " + tomorrowBuyingPrice1 + "," + tomorrowBuyingPrice2 + "," + tomorrowBuyingPrice3 + "," + tomorrowBuyingPrice4 +
-              " VWAP:" + todayVwap + " SellingPrice:" + tomorrowSellingPrice + " isInRange:" + inbetween(todayHigh, todayLow, tomorrowSellingPrice));
-          System.out.println(token[0] + ",todayhigh:" + todayHigh + ",today Low:" + todayLow);
+              " isCapitalOver:" + isCapitalOver + " SellingPrice:" + tomorrowSellingPrice + " isSellingInRange:" + inbetween(todayHigh, todayLow, tomorrowSellingPrice));
+          System.out.println(token[0] + ",todayhigh:" + todayHigh + ",today Low:" + todayLow + " date:" + date);
 
           if (inbetween(todayHigh, todayLow, tomorrowBuyingPrice1) && !isCapitalOver) {
             quantityBoughtToday += quantityToBeBoughtPerOrder;
@@ -111,7 +134,9 @@ public class BackTestingBajFinance {
             netProfit += profit;
             double moneyGainedFromSale = tomorrowSellingPrice * quantityheld;
             capitalInHand += moneyGainedFromSale;
-
+            reCalcCapToDeploy = true;
+            sellOrder++;
+            isCapitalOver = false;
             System.out.println("Sold qty: " + quantityheld + " Profit:" + profit + " NetProfit:" + netProfit);
             quantityheld = 0;
             totalMoneySpent = 0.0;
@@ -125,24 +150,30 @@ public class BackTestingBajFinance {
         if (totalQtyOnHand > 0) {
           avgCostPrice = totalMoneySpent / totalQtyOnHand;
         }
-        if (totalMoneySpent > maxCapital) {
-          isCapitalOver = true;
-        }
+
+
 
         quantityheld += quantityBoughtToday;
         capitalInHand -= todayMoneySpent;
         tomorrowSellingPrice = avgCostPrice * 1.04;
 
+        if(capitalInHand < 50000){
+          isCapitalOver = true;
+        }
 
         System.out.println("=======================================i:" + i + ", qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
-            + quantityheld + " totalMoneySpent:" + totalMoneySpent + " avgCP:" + avgCostPrice);
+            + quantityheld + " totalMoneySpent:" + totalMoneySpent + " avgCP:" + avgCostPrice + " capitalInHand:" + capitalInHand);
         quantityBoughtToday = 0;
         System.out.println();
         if (totalMoneySpent > maxMoneySpent) {
           maxMoneySpent = totalMoneySpent;
         }
+        if (minCapitalInHand > capitalInHand) {
+          minCapitalInHand = capitalInHand;
+        }
       }
       System.out.println("Net Profit:" + netProfit);
+      System.out.println("Total sell Orders:" + sellOrder + " mincapital:" + minCapitalInHand);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -155,6 +186,16 @@ public class BackTestingBajFinance {
     if (high > price && price > low) {
       return true;
     }
+    return false;
+  }
+
+
+  public static boolean sell(Double high, Double low, Double price){
+    if(low > price || inbetween(high, low, price)){
+      return true;
+    }
+
+
     return false;
   }
 }
