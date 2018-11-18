@@ -22,6 +22,10 @@ public class StockApplication {
   public static final String KITE_PUBLIC_TOKEN = "kite.publicToken";
 
 
+  private static final String API_KEY = "x2q91buzodevyg3n";
+  private static final String USER_ID = "ZE2198";
+  private static final String API_SECRET = "wpln7i3v1c8lq1dmhgyq6vpnhqhuzavz";
+
   @Autowired
   private KiteConnect kiteConnect;
 
@@ -59,8 +63,8 @@ public class StockApplication {
       String [] symbol = {"NSE:BAJFINANCE"};
       System.out.println("trying to place order...");
   //    stag.placeStaggeredAmoBuyOrderOnCamarillaSupport(symbol, 3);
-      //stockService.placeAmoOrder();
-      stockService.f();
+      stockService.placeAmoOrder();
+     // stockService.f();
     } catch (Throwable e) {
       e.printStackTrace();
      // login();

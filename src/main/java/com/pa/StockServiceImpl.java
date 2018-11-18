@@ -51,7 +51,7 @@ public class StockServiceImpl implements StockService {
      * Following is an example param for LIMIT order,
      * if a call fails then KiteException will have error message in it
      * Success of this call implies only order has been placed successfully, not order execution. */
-
+    //TO Pleace AMO order
     OrderParams orderParams = new OrderParams();
     orderParams.quantity = 1;
     orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
@@ -70,20 +70,59 @@ public class StockServiceImpl implements StockService {
 
 
   public void placeAmoOrder() {
-    String[] instruments = {"NSE:BAJFINANCE"};
-    System.out.println("in place order");
-    Map<String, OHLCQuote> ohlcMap = null;
+
+
+    OrderParams orderParams = new OrderParams();
+    orderParams.quantity = 1;
+    orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
+    orderParams.tradingsymbol = "PERSISTENT";
+    orderParams.product = Constants.PRODUCT_CNC;
+    orderParams.exchange = Constants.EXCHANGE_NSE;
+    orderParams.transactionType = Constants.TRANSACTION_TYPE_SELL;
+    orderParams.validity = Constants.VALIDITY_DAY;
+    orderParams.price = 553.0;
+    orderParams.triggerPrice = 0.0;
+    orderParams.tag = "myTag";
+
+    //TO Place regular order
+//    OrderParams orderParams = new OrderParams();
+//    orderParams.quantity = 1;
+//    orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
+//    orderParams.tradingsymbol = "PERSISTANT";
+//    orderParams.product = Constants.PRODUCT_CNC;
+//    orderParams.exchange = Constants.EXCHANGE_NSE;
+//    orderParams.transactionType = Constants.TRANSACTION_TYPE_SELL;
+//    orderParams.validity = Constants.VALIDITY_DAY;
+//    orderParams.triggerPrice = 0.0;
+//    orderParams.price = 553.0;
+    //orderParams.triggerPrice = 0.0;
+    //orderParams.tag = "myTestBajFin"; //tag is optional and it cannot be more than 8 characters and only alphanumeric is allowed
+
+    Order order = null;
     try {
-      ohlcMap = getOHLC(instruments);
-    } catch (KiteException | IOException e) {
+      order = kiteConnect.placeOrder(orderParams, Constants.VARIETY_REGULAR);
+    } catch (KiteException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println(order.orderId);
 
-    for (Map.Entry<String, OHLCQuote> entry : ohlcMap.entrySet()) {
-      OHLCQuote ohlc = entry.getValue();
-      System.out.println("VWAP:" + (ohlc.ohlc.open + ohlc.ohlc.close) / 2);
-      System.out.println(entry.getKey() + "/" + entry.getValue());
-    }
+
+//    String[] instruments = {"NSE:BAJFINANCE"};
+//    System.out.println("in place order");
+//    Map<String, OHLCQuote> ohlcMap = null;
+//    try {
+//      ohlcMap = getOHLC(instruments);
+//    } catch (KiteException | IOException e) {
+//      e.printStackTrace();
+//    }
+//
+//    for (Map.Entry<String, OHLCQuote> entry : ohlcMap.entrySet()) {
+//      OHLCQuote ohlc = entry.getValue();
+//      System.out.println("VWAP:" + (ohlc.ohlc.open + ohlc.ohlc.close) / 2);
+//      System.out.println(entry.getKey() + "/" + entry.getValue());
+//    }
   }
 
 
