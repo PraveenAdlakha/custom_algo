@@ -59,11 +59,12 @@ public class StockApplication {
     try {
       String email = kiteConnect.getProfile().email;
       System.out.println("Looks like logged in. Successfully retrieved email id " + email);
-      StaggeredBuyingAndSelling stag = new StaggeredBuyingAndSelling();
-      String [] symbol = {"NSE:BAJFINANCE"};
+      //StaggeredBuyingAndSelling stag = new StaggeredBuyingAndSelling();
+      //String [] symbol = {"NSE:BAJFINANCE"};
       System.out.println("trying to place order...");
   //    stag.placeStaggeredAmoBuyOrderOnCamarillaSupport(symbol, 3);
-      stockService.placeAmoOrder();
+     // stockService.placeAmoOrder();
+      stockService.placeAmoSellOrder();
      // stockService.f();
     } catch (Throwable e) {
       e.printStackTrace();

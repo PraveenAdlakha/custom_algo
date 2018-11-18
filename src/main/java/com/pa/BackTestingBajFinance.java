@@ -9,7 +9,7 @@ import java.util.function.DoubleBinaryOperator;
 
 public class BackTestingBajFinance {
 
-  static double maxMoneySpent =0;
+  static double maxMoneySpent = 0;
   static boolean isCapitalOver = false;
   static double maxCapital = 500000;
 
@@ -17,6 +17,7 @@ public class BackTestingBajFinance {
     BackTestingBajFinance bajFinance = new BackTestingBajFinance();
 
     readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018BAJFINANCEALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018RELIANCEALLN.csv");
   }
 
   public static void readDataLineByLine(String file) {
@@ -30,6 +31,7 @@ public class BackTestingBajFinance {
           .build();
       List<String[]> allData = csvReader.readAll();
       Double tomorrowSellingPrice = 0.0;
+      Double pivot = 0.0;
       Double tomorrowBuyingPrice1;
       Double tomorrowBuyingPrice2;
       Double tomorrowBuyingPrice3;
@@ -41,9 +43,16 @@ public class BackTestingBajFinance {
       Double netProfit = 0.0;
       Double avgCostPrice = 0.0;
       Double totalMoneySpent = 0.0;
+      Double capitalInHand = maxCapital;
 
       for (int i = 0; i < allData.size(); i++) {
-     // for (int i = 0; i < 442; i++) {
+
+        if (avgCostPrice > 0) {
+          double capitalToDeploy = capitalInHand / 5;
+          quantityToBeBoughtPerOrder = ((int)Math.floor(capitalToDeploy / avgCostPrice))/4;
+        }
+
+        // for (int i = 0; i < 442; i++) {
         todayMoneySpent = 0.0;
         String[] token = allData.get(i);
         String symbol = token[0];
@@ -51,11 +60,19 @@ public class BackTestingBajFinance {
         Double todayLow = Double.valueOf(token[6]);
         Double todayOpen = Double.valueOf(token[4]);
         Double todayHigh = Double.valueOf(token[5]);
+        Double todayClose = Double.valueOf(token[8]);
+        pivot = (todayHigh + todayLow + todayClose) / 3;
+        Double range = (todayHigh - todayLow);
+        tomorrowBuyingPrice1 = pivot - range / 2;
+        tomorrowBuyingPrice2 = pivot - range * 0.618;
+        tomorrowBuyingPrice3 = pivot - range;
+        tomorrowBuyingPrice4 = pivot - range * 1.382;
         String date = token[2];
-        tomorrowBuyingPrice1 = todayVwap;
-        tomorrowBuyingPrice2 = todayVwap * 0.99;
-        tomorrowBuyingPrice3 = todayLow;
-        tomorrowBuyingPrice4 = todayLow * 0.99;
+        //This is way 1 to test and bajfinance on 5l gave 84 and reliance 5l gave 74
+//        tomorrowBuyingPrice1 = todayVwap;
+//        tomorrowBuyingPrice2 = todayVwap * 0.99;
+//        tomorrowBuyingPrice3 = todayLow;
+//        tomorrowBuyingPrice4 = todayLow * 0.99;
 
         if (i == 0) {
           tomorrowSellingPrice = 0.0;
@@ -92,6 +109,9 @@ public class BackTestingBajFinance {
           if (inbetween(todayHigh, todayLow, tomorrowSellingPrice)) {
             Double profit = quantityheld * (tomorrowSellingPrice - avgCostPrice);
             netProfit += profit;
+            double moneyGainedFromSale = tomorrowSellingPrice * quantityheld;
+            capitalInHand += moneyGainedFromSale;
+
             System.out.println("Sold qty: " + quantityheld + " Profit:" + profit + " NetProfit:" + netProfit);
             quantityheld = 0;
             totalMoneySpent = 0.0;
@@ -105,19 +125,20 @@ public class BackTestingBajFinance {
         if (totalQtyOnHand > 0) {
           avgCostPrice = totalMoneySpent / totalQtyOnHand;
         }
-        if(totalMoneySpent > maxCapital){
+        if (totalMoneySpent > maxCapital) {
           isCapitalOver = true;
         }
 
         quantityheld += quantityBoughtToday;
-        tomorrowSellingPrice = avgCostPrice * 1.025;
+        capitalInHand -= todayMoneySpent;
+        tomorrowSellingPrice = avgCostPrice * 1.04;
 
 
         System.out.println("=======================================i:" + i + ", qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
             + quantityheld + " totalMoneySpent:" + totalMoneySpent + " avgCP:" + avgCostPrice);
         quantityBoughtToday = 0;
         System.out.println();
-        if(totalMoneySpent > maxMoneySpent) {
+        if (totalMoneySpent > maxMoneySpent) {
           maxMoneySpent = totalMoneySpent;
         }
       }

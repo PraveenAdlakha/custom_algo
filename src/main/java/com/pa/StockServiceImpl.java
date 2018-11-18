@@ -9,7 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static jdk.nashorn.internal.objects.NativeMath.round;
 
 @Service
 public class StockServiceImpl implements StockService {
@@ -69,7 +73,7 @@ public class StockServiceImpl implements StockService {
   }
 
 
-  public void placeAmoOrder() {
+  public void placeAmoOrder1() {
 
 
     OrderParams orderParams = new OrderParams();
@@ -126,16 +130,73 @@ public class StockServiceImpl implements StockService {
   }
 
 
-  public void f(){
+  public void placeAmoOrder(){
     String[] instruments = {"NSE:BAJFINANCE"};
     Map<String, OHLCQuote> ohlcMap = null;
     try {
       Map<String, Quote> quotes = kiteConnect.getQuote(instruments);
       Quote quote = quotes.get("NSE:BAJFINANCE");
-      System.out.println(quote.averagePrice + " :: " + quote.oiDayLow) ;
+      Double todayLow = quote.ohlc.low;
+      Double todayHigh = quote.ohlc.high;
+      Double todayClose = quote.ohlc.close;
+      Double pivot = (todayHigh + todayLow + todayClose) / 3;
+      Double range = (todayHigh - todayLow);
+      Double tomorrowBuyingPrice1 = pivot - range / 2;
+      Double tomorrowBuyingPrice2 = pivot - range * 0.618;
+      Double tomorrowBuyingPrice3 = pivot - range;
+      Double tomorrowBuyingPrice4 = pivot - range * 1.382;
+      OrderParams orderParams = new OrderParams();
+      orderParams.quantity = 3;
+      orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
+      orderParams.tradingsymbol = "BAJFINANCE";
+      orderParams.product = Constants.PRODUCT_CNC;
+      orderParams.exchange = Constants.EXCHANGE_NSE;
+      orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
+      orderParams.validity = Constants.VALIDITY_DAY;
+      orderParams.price = tomorrowBuyingPrice1;
+      ArrayList<Double> list = new ArrayList<>();
+      list.add(tomorrowBuyingPrice1);
+      list.add(tomorrowBuyingPrice2);
+      list.add(tomorrowBuyingPrice3);
+      list.add(tomorrowBuyingPrice4);
+
+      for(int i =0;i <3;i++){
+        orderParams.price = round( list.get(i), 2);
+        kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
+      }
+      Order order = kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
+
+      System.out.println(tomorrowBuyingPrice1 + " :: " + tomorrowBuyingPrice2 + "::" + tomorrowBuyingPrice3 + "::" +tomorrowBuyingPrice4) ;
     } catch (KiteException | IOException e) {
       e.printStackTrace();
     }
 
+  }
+
+  public void placeAmoSellOrder(){
+
+    try {
+      List<Holding> list = kiteConnect.getHoldings();
+      for(Holding holding : list){
+        System.out.println(holding.tradingSymbol + "::" + " quantity:" + holding.quantity + " price:" + holding.averagePrice);
+        if(holding.tradingSymbol.equals("BAJFINANCE")){
+          OrderParams orderParams = new OrderParams();
+          orderParams.quantity = Integer.parseInt(holding.quantity);
+          orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
+          orderParams.tradingsymbol = "BAJFINANCE";
+          orderParams.product = Constants.PRODUCT_CNC;
+          orderParams.exchange = Constants.EXCHANGE_NSE;
+          orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
+          orderParams.validity = Constants.VALIDITY_DAY;
+          orderParams.price = Double.valueOf( holding.averagePrice ) * 1.035;
+          kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
+        }
+
+      }
+    } catch (KiteException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
