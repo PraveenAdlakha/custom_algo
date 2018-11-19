@@ -35,8 +35,15 @@ public class BackTestingBajFinance {
   public static void main(String[] args) {
     BackTestingBajFinance bajFinance = new BackTestingBajFinance();
 
-    readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018BAJFINANCEALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018BAJFINANCEALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018SBINALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018ITCALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018HINDUNILVRALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018MARUTIALLN.csv");
     //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018RELIANCEALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018YESBANKALLN.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018HINDALCOALLN.csv");
+    readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018ICICIBANKALLN.csv");
   }
 
   public static void readDataLineByLine(String file) {
@@ -161,7 +168,7 @@ public class BackTestingBajFinance {
           isCapitalOver = true;
         }
 
-        System.out.println("=======================================i:" + i + ", qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
+        System.out.println("======================================= "+  " qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
             + quantityheld + " totalMoneySpent:" + totalMoneySpent + " avgCP:" + avgCostPrice + " capitalInHand:" + capitalInHand);
         quantityBoughtToday = 0;
         System.out.println();
