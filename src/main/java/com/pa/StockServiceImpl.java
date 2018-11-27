@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -159,12 +160,13 @@ public class StockServiceImpl implements StockService {
       list.add(tomorrowBuyingPrice2);
       list.add(tomorrowBuyingPrice3);
       list.add(tomorrowBuyingPrice4);
+      DecimalFormat df = new DecimalFormat("###.#");
 
       for(int i =0;i <3;i++){
-        orderParams.price = round( list.get(i), 2);
+        orderParams.price = Double.valueOf( df.format(list.get(i)));
         kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
       }
-      Order order = kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
+      //Order order = kiteConnect.placeOrder(orderParams, Constants.VARIETY_AMO);
 
       System.out.println(tomorrowBuyingPrice1 + " :: " + tomorrowBuyingPrice2 + "::" + tomorrowBuyingPrice3 + "::" +tomorrowBuyingPrice4) ;
     } catch (KiteException | IOException e) {

@@ -4,7 +4,13 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import java.io.FileReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BackTestingBajFinance {
 
@@ -42,11 +48,22 @@ public class BackTestingBajFinance {
     //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018MARUTIALLN.csv");
     //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018RELIANCEALLN.csv");
     //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018YESBANKALLN.csv");
-    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018HINDALCOALLN.csv");
-    readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018ICICIBANKALLN.csv");
+   // readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018HINDALCOALLN.csv");
+   // readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/REL_historic_data.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/HALC_historic_data.csv");
+   // readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/BJF_historic_data.csv");
+   // readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/Rel_historic.csv");
+   //  readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/HLL_historic_data.csv");
+   // readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/HDBK_historic_data.csv");
+    readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/Maruti_historic.csv");
+    //readDataLineByLine("/Users/padlakha/git/zerodha/mystock/src/main/resources/17-11-2016-TO-16-11-2018ICICIBANKALLN.csv");
   }
 
   public static void readDataLineByLine(String file) {
+
+    Map<String,Double> returnPerMonth = new LinkedHashMap();
+    Map<String,Double> returnPerYear = new LinkedHashMap();
+
 
     try {
       // Create an object of file reader
@@ -70,10 +87,11 @@ public class BackTestingBajFinance {
       Double netProfit = 0.0;
       Double avgCostPrice = 0.0;
       Double totalMoneySpent = 0.0;
+      Double netLoss = 0.0;
 
 
       for (int i = 0; i < allData.size(); i++) {
-
+        //double capitalToDeploy = capitalInHand/5/4;
         double capitalToDeploy = getCapitalToDeploy();
         if (avgCostPrice > 0) {
           quantityToBeBoughtPerOrder = ((int) Math.floor(capitalToDeploy / avgCostPrice)) / 4;
@@ -86,18 +104,28 @@ public class BackTestingBajFinance {
         todayMoneySpent = 0.0;
         String[] token = allData.get(i);
         String symbol = token[0];
-        Double todayVwap = Double.valueOf(token[9]);
-        Double todayLow = Double.valueOf(token[6]);
-        Double todayOpen = Double.valueOf(token[4]);
-        Double todayHigh = Double.valueOf(token[5]);
-        Double todayClose = Double.valueOf(token[8]);
+        //This is for investing.com data
+        Double todayLow = Double.valueOf(token[4]);
+        Double todayHigh = Double.valueOf(token[3]);
+        Double todayClose = Double.valueOf(token[1]);
+        String date = token[0];
+        String monthYear = date.substring(3,date.length());
+        String year = date.substring(date.length()-2 , date.length());
+        //System.out.println(year);
+        //This is for nse data
+//        Double todayVwap = Double.valueOf(token[9]);
+//        Double todayLow = Double.valueOf(token[6]);
+//        Double todayOpen = Double.valueOf(token[4]);
+//        Double todayHigh = Double.valueOf(token[5]);
+//        Double todayClose = Double.valueOf(token[8]);
         pivot = (todayHigh + todayLow + todayClose) / 3;
         Double range = (todayHigh - todayLow);
-        tomorrowBuyingPrice1 = pivot - range / 2;
-        tomorrowBuyingPrice2 = pivot - range * 0.618;
-        tomorrowBuyingPrice3 = pivot - range;
-        tomorrowBuyingPrice4 = pivot - range * 1.382;
-        String date = token[2];
+        DecimalFormat df = new DecimalFormat("###.#");
+        tomorrowBuyingPrice1 = Double.valueOf( df.format(pivot - range / 2));
+        tomorrowBuyingPrice2 = Double.valueOf( df.format( pivot - range * 0.618));
+        tomorrowBuyingPrice3 = Double.valueOf( df.format( pivot - range));
+        tomorrowBuyingPrice4 = Double.valueOf( df.format( pivot - range * 1.382));
+        //String date = token[2];
         //This is way 1 to test and bajfinance on 5l gave 84 and reliance 5l gave 74
 //        tomorrowBuyingPrice1 = todayVwap;
 //        tomorrowBuyingPrice2 = todayVwap * 0.99;
@@ -107,11 +135,8 @@ public class BackTestingBajFinance {
         if (i == 0) {
           tomorrowSellingPrice = 0.0;
         } else {
-          System.out.println("Buying prices: " + tomorrowBuyingPrice1 + "," + tomorrowBuyingPrice2 + "," + tomorrowBuyingPrice3 + "," + tomorrowBuyingPrice4 +
-              " isCapitalOver:" + isCapitalOver + " SellingPrice:" + tomorrowSellingPrice + " isSellingInRange:" + inbetween(todayHigh, todayLow, tomorrowSellingPrice));
-          System.out.println(token[0] + ",todayhigh:" + todayHigh + ",today Low:" + todayLow + " date:" + date);
-
           if (inbetween(todayHigh, todayLow, tomorrowBuyingPrice1) && !isCapitalOver) {
+            System.out.println("========================");
             quantityBoughtToday += quantityToBeBoughtPerOrder;
             todayMoneySpent += quantityToBeBoughtPerOrder * tomorrowBuyingPrice1;
             System.out.println("Order 1 executed on:" + date + " qty:" + quantityToBeBoughtPerOrder + " costPrice:" + tomorrowBuyingPrice1 + " TodayMoneySpend:" + todayMoneySpent);
@@ -136,7 +161,7 @@ public class BackTestingBajFinance {
             System.out.println("Order 4 executed on:" + date + " qty:" + quantityToBeBoughtPerOrder + " costPrice:" + tomorrowBuyingPrice4 + " TodayMoneySpend:" + todayMoneySpent);
           }
 
-          if (inbetween(todayHigh, todayLow, tomorrowSellingPrice)) {
+          if (sell(todayHigh, todayLow, tomorrowSellingPrice)) {
             Double profit = quantityheld * (tomorrowSellingPrice - avgCostPrice);
             netProfit += profit;
             double moneyGainedFromSale = tomorrowSellingPrice * quantityheld;
@@ -148,6 +173,27 @@ public class BackTestingBajFinance {
             quantityheld = 0;
             totalMoneySpent = 0.0;
             avgCostPrice = 0.0;
+            returnPerYear.putIfAbsent(year, netProfit);
+            returnPerMonth.putIfAbsent(monthYear, netProfit);
+          }
+
+          if(isCapitalOver && todayClose < avgCostPrice *.85){
+            System.out.println("==================== net Profit:" + netProfit);
+            isCapitalOver = false;
+            double loss = quantityheld*(todayClose - avgCostPrice);
+            netLoss +=  loss;
+            netProfit += loss;
+            capitalInHand += quantityheld*todayClose;
+            System.out.println("Sold qty: " + quantityheld + " Loss:" + loss +
+                " NetProfit:" + netProfit + " NetLoss:"+ netLoss + " todayClose:" + todayClose + " avgCP:" +avgCostPrice);
+            quantityheld = 0;
+            totalMoneySpent = 0.0;
+            avgCostPrice = 0.0;
+            reCalcCapToDeploy = true;
+            System.out.println("Buying prices: " + tomorrowBuyingPrice1 + "," + tomorrowBuyingPrice2 + "," + tomorrowBuyingPrice3 + "," + tomorrowBuyingPrice4 +
+                " isCapitalOver:" + isCapitalOver + " SellingPrice:" + tomorrowSellingPrice + " isSellingInRange:" + inbetween(todayHigh, todayLow, tomorrowSellingPrice));
+            System.out.println(token[0] + ",todayhigh:" + todayHigh + ",today Low:" + todayLow + " date:" + date);
+            //System.out.println("Booked loss of :"+ netLoss);
           }
         }
 
@@ -158,18 +204,24 @@ public class BackTestingBajFinance {
           avgCostPrice = totalMoneySpent / totalQtyOnHand;
         }
 
-
-
         quantityheld += quantityBoughtToday;
         capitalInHand -= todayMoneySpent;
-        tomorrowSellingPrice = avgCostPrice * 1.04;
+        tomorrowSellingPrice = Double.valueOf( df.format( avgCostPrice * 1.04));
 
         if(capitalInHand < 50000){
           isCapitalOver = true;
         }
+        if(quantityBoughtToday !=0){
+        //System.out.println("========================");
 
-        System.out.println("======================================= "+  " qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
+        System.out.println(" qtyBought:" + quantityBoughtToday + " qtyheldEOD:"
             + quantityheld + " totalMoneySpent:" + totalMoneySpent + " avgCP:" + avgCostPrice + " capitalInHand:" + capitalInHand);
+
+        System.out.println("Buying prices: " + tomorrowBuyingPrice1 + "," + tomorrowBuyingPrice2 + "," + tomorrowBuyingPrice3 + "," + tomorrowBuyingPrice4 +
+              " isCapitalOver:" + isCapitalOver + " SellingPrice:" + tomorrowSellingPrice + " isSellingInRange:" + inbetween(todayHigh, todayLow, tomorrowSellingPrice));
+          System.out.println(token[0] + ",todayhigh:" + todayHigh + ",today Low:" + todayLow +
+              " date:" + date + " Net Profit:" + netProfit + " Net Loss:" + netLoss);
+        }
         quantityBoughtToday = 0;
         System.out.println();
         if (totalMoneySpent > maxMoneySpent) {
@@ -180,7 +232,10 @@ public class BackTestingBajFinance {
         }
       }
       System.out.println("Net Profit:" + netProfit);
+      System.out.println("Net Loss:" + netLoss);
       System.out.println("Total sell Orders:" + sellOrder + " mincapital:" + minCapitalInHand);
+//      System.out.println("Net profit per month:" + returnPerMonth.toString());
+//      System.out.println("Net profit per year:"+ returnPerYear.toString());
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -201,8 +256,6 @@ public class BackTestingBajFinance {
     if(low > price || inbetween(high, low, price)){
       return true;
     }
-
-
     return false;
   }
 }

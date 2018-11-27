@@ -63,8 +63,8 @@ public class StockApplication {
       //String [] symbol = {"NSE:BAJFINANCE"};
       System.out.println("trying to place order...");
   //    stag.placeStaggeredAmoBuyOrderOnCamarillaSupport(symbol, 3);
-     // stockService.placeAmoOrder();
-      stockService.placeAmoSellOrder();
+      stockService.placeAmoOrder();
+     // stockService.placeAmoSellOrder();
      // stockService.f();
     } catch (Throwable e) {
       e.printStackTrace();
